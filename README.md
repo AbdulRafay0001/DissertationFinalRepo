@@ -47,14 +47,8 @@ Voiceflow Setup:
    - Ensure HTTP method is POST and JSON body matches the FastAPI schema.
 
 Repository Structure:
-.
-├── app.py                  # FastAPI application & endpoints
-├── pipeline1_test.py       # Offline tester for P-AUTO
-├── tfidf_test.py           # Offline tester for P-TF
-├── requirements.txt        # Python dependencies
-├── voiceflow/
-│   └── flow.json           # Exported Voiceflow project
-└── README.txt              # This file
+![image](https://github.com/user-attachments/assets/08609f7b-7854-44ad-ac47-d919693f611e)
+
 
 Testing & Validation:
 - Offline tests:
