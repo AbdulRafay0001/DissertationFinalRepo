@@ -102,3 +102,52 @@ def recommend_tfidf_user(
     # return top-3
     top3 = sorted(sims, key=lambda x: x[1], reverse=True)[:3]
     return {"recommendations": [{"item": n, "score": round(s,3)} for n,s in top3]}
+
+@app.post("/recommend_user_refined")
+def recommend_user_refined(
+    database:          str = Form(...),
+    attribute_vectors: str = Form(...),
+    attributes:        str = Form(...),
+    user_vector:       str = Form(...)
+):
+    # 1) parse JSON inputs
+    try:
+        db  = json.loads(database)
+        vecs = json.loads(attribute_vectors)
+    except json.JSONDecodeError as e:
+        raise HTTPException(400, f"Bad JSON: {e}")
+
+    # 2) attrs & user
+    try:
+        attrs = json.loads(attributes)
+    except:
+        attrs = attributes.strip().split()
+    try:
+        user = json.loads(user_vector)
+    except:
+        user = [float(x) for x in user_vector.strip().split()]
+
+    # 3) score every item
+    def cos(u, v):
+        dot = sum(a*b for a,b in zip(u,v))
+        nu  = math.sqrt(sum(a*a for a in u))
+        nv  = math.sqrt(sum(b*b for b in v))
+        return dot/(nu*nv) if nu and nv else 0.0
+
+    scores = []
+    for item, vec_dict in vecs.items():
+        if all(a in vec_dict for a in attrs):
+            v = [vec_dict[a] for a in attrs]
+            scores.append((item, cos(user, v)))
+
+    # 4) top-10 → refine
+    topN = sorted(scores, key=lambda x: x[1], reverse=True)[:10]
+    items      = [itm for itm,_ in topN]
+    top_scores = [round(sc,3) for _,sc in topN]
+    refined_db = { itm: db.get(itm, "") for itm in items }
+
+    return {
+        "top_items":        items,
+        "top_scores":       top_scores,
+        "refined_database": json.dumps(refined_db)
+    }
